@@ -1,142 +1,26 @@
-import { ArrowUpRight, BarChart3, Flame, Search, Sparkles, TrendingUp } from 'lucide-react';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-const stats = [
-  { label: 'Trending niches', value: '24', change: '+12%' },
-  { label: 'Rising channels', value: '81', change: '+9%' },
-  { label: 'Extreme outliers', value: '46', change: '+18%' },
-  { label: 'Avg. opportunity', value: '87', change: '+7%' },
-];
-
-const opportunities = [
-  { name: 'AI Historical Stories', score: 91, growth: '+48%', saturation: 'Low', outlier: '7.4x' },
-  { name: 'Luxury Lifestyle POV', score: 89, growth: '+34%', saturation: 'Medium', outlier: '6.1x' },
-  { name: 'Motivation Shorts', score: 86, growth: '+41%', saturation: 'Low', outlier: '5.9x' },
-];
-
-export default function Page() {
-  return (
-    <main className="min-h-screen bg-[#07111f] text-slate-100">
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        <header className="mb-8 flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-2xl shadow-slate-950/20">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-sky-400">Vercel Search YT</p>
-            <h1 className="mt-2 text-2xl font-semibold">YouTube niche intelligence dashboard</h1>
-          </div>
-          <nav className="hidden items-center gap-4 text-sm text-slate-300 md:flex">
-            {['Dashboard', 'Discover', 'Videos', 'Channels', 'Niches', 'Outliers'].map((item) => (
-              <a key={item} href="#" className="transition hover:text-white">
-                {item}
-              </a>
-            ))}
-          </nav>
-        </header>
-
-        <section className="grid gap-4 md:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-              <p className="text-sm text-slate-400">{stat.label}</p>
-              <div className="mt-4 flex items-end justify-between">
-                <span className="text-3xl font-bold">{stat.value}</span>
-                <span className="text-sm font-medium text-emerald-400">{stat.change}</span>
-              </div>
-            </div>
-          ))}
-        </section>
-
-        <section className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">What should I investigate today?</p>
-                <h2 className="mt-2 text-2xl font-semibold">Niche opportunity radar</h2>
-              </div>
-              <button className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 transition hover:bg-sky-400">
-                <Search size={16} /> Discover
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {opportunities.map((item) => (
-                <div key={item.name} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-                  <div>
-                    <h3 className="text-lg font-medium">{item.name}</h3>
-                    <p className="text-sm text-slate-400">Median outlier: {item.outlier}</p>
-                  </div>
-                  <div className="flex items-center gap-6 text-sm">
-                    <div>
-                      <p className="text-slate-400">Opportunity</p>
-                      <p className="text-lg font-semibold text-sky-400">{item.score}/100</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-400">Growth</p>
-                      <p className="text-lg font-semibold text-emerald-400">{item.growth}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-400">Saturation</p>
-                      <p className="text-lg font-semibold text-amber-300">{item.saturation}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <aside className="space-y-6">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-              <div className="mb-4 flex items-center gap-2 text-sky-400">
-                <Flame size={18} />
-                <span className="font-medium">Extreme outliers</span>
-              </div>
-              <div className="space-y-4">
-                {['AI storytelling', 'Micro niche slop', 'Ghost kitchen hacks'].map((label, index) => (
-                  <div key={label} className="flex items-center justify-between rounded-xl bg-slate-950/60 p-3">
-                    <div>
-                      <p className="font-medium">{label}</p>
-                      <p className="text-xs text-slate-400">Breakout score</p>
-                    </div>
-                    <span className="text-lg font-semibold text-rose-400">{15 - index}x</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-              <div className="mb-4 flex items-center gap-2 text-emerald-400">
-                <TrendingUp size={18} />
-                <span className="font-medium">Fast growth</span>
-              </div>
-              <ul className="space-y-3 text-sm text-slate-300">
-                <li className="flex items-center justify-between rounded-lg bg-slate-950/60 p-3">
-                  <span>Creator A</span>
-                  <span className="text-emerald-400">+82%</span>
-                </li>
-                <li className="flex items-center justify-between rounded-lg bg-slate-950/60 p-3">
-                  <span>Creator B</span>
-                  <span className="text-emerald-400">+76%</span>
-                </li>
-                <li className="flex items-center justify-between rounded-lg bg-slate-950/60 p-3">
-                  <span>Creator C</span>
-                  <span className="text-emerald-400">+69%</span>
-                </li>
-              </ul>
-            </div>
-          </aside>
-        </section>
-
-        <section className="mt-8 grid gap-6 md:grid-cols-3">
-          {[
-            { icon: Sparkles, title: 'Opportunity Scoring', text: 'Measure demand, outlier frequency, freshness and monetization potential.' },
-            { icon: BarChart3, title: 'Historical Baselines', text: 'Compare against channel and niche baselines by age bucket and format.' },
-            { icon: ArrowUpRight, title: 'Vercel-ready stack', text: 'Next.js + Prisma + PostgreSQL + YouTube API abstraction designed for deployment.' },
-          ].map(({ icon: Icon, title, text }) => (
-            <div key={title} className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-              <Icon className="mb-4 h-8 w-8 text-sky-400" />
-              <h3 className="mb-2 text-xl font-semibold">{title}</h3>
-              <p className="text-sm text-slate-400">{text}</p>
-            </div>
-          ))}
-        </section>
-      </div>
-    </main>
-  );
+:root {
+  color-scheme: dark;
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 13%;
+  --card-foreground: 210 40% 98%;
+  --primary: 199 89% 60%;
+  --primary-foreground: 222 47% 11%;
+  --muted: 217 19% 27%;
+  --muted-foreground: 215 20% 70%;
+  --accent: 174 78% 51%;
+  --accent-foreground: 222 47% 11%;
+  --border: 215 28% 22%;
+  --input: 215 28% 22%;
+  --ring: 199 89% 60%;
+  --radius: 1rem;
 }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: hsl(var(--background)); color: hsl(var(--foreground)); }
+a { text-decoration: none; }
