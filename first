@@ -1,0 +1,1337 @@
+You are a senior full-stack engineer, data engineer, product designer, and YouTube analytics specialist.
+
+Build a production-ready GitHub repository for a modern YouTube niche research and viral opportunity intelligence platform inspired by products such as Nichle, but DO NOT copy proprietary source code, branding, UI, assets, or private algorithms.
+
+The goal is to create an original product that analyzes publicly available YouTube data through the official YouTube Data API and helps creators discover:
+
+- underserved YouTube niches
+- rapidly growing channels
+- unusually successful videos
+- viral outliers
+- Shorts opportunities
+- long-form opportunities
+- niche saturation
+- title patterns
+- similar channels
+- estimated revenue potential
+- channel growth patterns
+- content opportunities
+
+The application must be deployable to Vercel.
+
+IMPORTANT:
+Do not start by writing random UI components.
+First design the complete architecture, database schema, API structure, calculation engine, background jobs, caching strategy, and folder structure.
+Then implement the project incrementally.
+
+==================================================
+PRODUCT VISION
+==================================================
+
+Create a SaaS-style YouTube intelligence platform.
+
+The main product concept is:
+
+"Find videos and niches that are performing far above what would normally be expected."
+
+The platform must NOT rank content only by raw views.
+
+A video with 5,000,000 views on a huge channel may be less interesting than a video with 100,000 views on a tiny channel if the second video dramatically outperforms that channel's normal baseline.
+
+The core metric should therefore be an OUTLIER SCORE.
+
+Example:
+
+Channel median views at comparable video age:
+10,000
+
+Current video views:
+180,000
+
+Outlier:
+18x
+
+This should be one of the central concepts of the product.
+
+==================================================
+CORE PRODUCT MODULES
+==================================================
+
+Implement these major modules:
+
+1. Dashboard
+2. Global Search
+3. Channel Explorer
+4. Video Explorer
+5. Shorts Explorer
+6. Long-form Explorer
+7. Niche Explorer
+8. Outlier Explorer
+9. Similar Channels
+10. Niche Saturation
+11. Title Pattern Analysis
+12. Channel Analytics
+13. Video Analytics
+14. Opportunity Score
+15. Saved Searches
+16. Swipe File / Saved Videos
+17. Watchlist
+18. Historical Metrics
+19. Estimated Revenue
+20. Admin/Data Health dashboard
+
+The architecture must make it easy to add additional modules later.
+
+==================================================
+DATA SOURCE
+==================================================
+
+Use the official YouTube Data API v3.
+
+Never scrape YouTube HTML pages unless absolutely necessary and legally appropriate.
+
+Use the YouTube API for:
+
+- channel metadata
+- video metadata
+- search results
+- playlist/video relationships
+- statistics
+- publication dates
+- thumbnails
+- categories
+- channel information
+
+Respect API quotas.
+
+Never expose the YouTube API key to the browser.
+
+Store the API key in:
+
+YOUTUBE_API_KEY
+
+and access it only from server-side code.
+
+Create a clean API abstraction:
+
+lib/youtube/
+
+with separate modules such as:
+
+client.ts
+channels.ts
+videos.ts
+search.ts
+playlists.ts
+categories.ts
+types.ts
+quota.ts
+
+==================================================
+DATABASE
+==================================================
+
+Use PostgreSQL.
+
+Use Prisma ORM.
+
+Design a normalized but analytics-friendly schema.
+
+At minimum create:
+
+User
+Account
+Channel
+Video
+VideoSnapshot
+ChannelSnapshot
+Niche
+VideoNiche
+Keyword
+TitlePattern
+SavedVideo
+SavedChannel
+SavedSearch
+Watchlist
+SearchHistory
+AnalyticsJob
+ApiUsage
+
+Channel fields should include:
+
+id
+youtubeChannelId
+title
+description
+customUrl
+country
+language
+publishedAt
+subscriberCount
+videoCount
+viewCount
+thumbnailUrl
+channelType
+isShortsFocused
+isFaceless
+facelessConfidence
+createdAt
+updatedAt
+
+Video fields should include:
+
+id
+youtubeVideoId
+channelId
+title
+description
+publishedAt
+durationSeconds
+categoryId
+thumbnailUrl
+viewCount
+likeCount
+commentCount
+isShort
+isLive
+tags
+language
+country
+createdAt
+updatedAt
+
+VideoSnapshot should contain historical measurements:
+
+videoId
+capturedAt
+viewCount
+likeCount
+commentCount
+
+ChannelSnapshot should contain:
+
+channelId
+capturedAt
+subscriberCount
+viewCount
+videoCount
+
+Historical snapshots are extremely important.
+
+Do not overwrite historical analytics when new API data arrives.
+
+==================================================
+VIDEO AGE
+==================================================
+
+Every video metric must understand video age.
+
+Calculate:
+
+ageSeconds
+ageMinutes
+ageHours
+ageDays
+
+Use these values when comparing videos.
+
+Never compare a 2-hour-old video directly with a 2-year-old video using raw views.
+
+==================================================
+OUTLIER ENGINE
+==================================================
+
+Create a dedicated analytics engine:
+
+lib/analytics/outlier/
+
+Implement:
+
+calculateOutlierScore()
+calculateExpectedViews()
+calculateChannelBaseline()
+calculateAgeAdjustedPerformance()
+
+Core concept:
+
+Outlier Ratio =
+actual views / expected views
+
+The expected views should be based on the channel's historical performance at a comparable age.
+
+For example:
+
+A video that is 48 hours old should primarily be compared with previous videos from that channel around 48 hours old.
+
+Use robust statistics.
+
+Prefer median over mean when appropriate because viral videos can heavily distort averages.
+
+Consider:
+
+- channel median
+- channel percentile distribution
+- video age
+- format
+- Shorts vs long-form
+- upload frequency
+- channel size
+- niche
+- historical performance
+
+Do not allow one viral video to completely distort the baseline.
+
+Create normalized scores.
+
+Example:
+
+1x = normal
+2x = above normal
+5x = strong outlier
+10x = major breakout
+20x+ = extreme breakout
+
+Also calculate:
+
+outlierPercentile
+
+For example:
+
+Top 1%
+Top 5%
+Top 10%
+
+==================================================
+SHORTS VS LONG-FORM
+==================================================
+
+Shorts and long-form must NEVER share the same baseline.
+
+Create separate analytics models.
+
+For Shorts analyze:
+
+- views
+- views/hour
+- views/day
+- outlier ratio
+- engagement
+- channel baseline
+- upload frequency
+- duration
+- title patterns
+
+For long-form analyze:
+
+- views
+- views/hour
+- views/day
+- outlier ratio
+- engagement
+- duration
+- channel baseline
+- upload frequency
+- title patterns
+
+Create:
+
+format = SHORT / LONG / LIVE
+
+==================================================
+VIEWS PER HOUR
+==================================================
+
+Implement:
+
+VPH = views / hoursSincePublished
+
+But also implement:
+
+Relative VPH =
+video VPH / channel median VPH at comparable age
+
+This should be more useful than raw VPH.
+
+Display both.
+
+==================================================
+ENGAGEMENT
+==================================================
+
+Calculate:
+
+likeRate =
+likes / views
+
+commentRate =
+comments / views
+
+engagementRate =
+(likes + comments) / views
+
+Handle missing statistics safely.
+
+Never divide by zero.
+
+==================================================
+CHANNEL BASELINE
+==================================================
+
+For each channel create a historical baseline.
+
+Calculate:
+
+median views
+mean views
+p25
+p50
+p75
+p90
+p95
+p99
+
+Do this separately for:
+
+Shorts
+Long-form
+
+and ideally for multiple age buckets:
+
+0-1h
+1-6h
+6-12h
+12-24h
+1-2d
+2-3d
+3-7d
+7-30d
+30d+
+
+If insufficient historical data exists, fall back intelligently:
+
+channel baseline
+→ niche baseline
+→ global baseline
+
+Never fabricate data.
+
+==================================================
+NICHE ENGINE
+==================================================
+
+Create a niche classification system.
+
+A niche can be represented by:
+
+- YouTube category
+- keywords
+- channel topic
+- title semantics
+- description semantics
+- tags when available
+- recurring topic clusters
+
+Do NOT depend exclusively on YouTube's category.
+
+A channel classified as "Entertainment" may actually belong to:
+
+- relationship stories
+- luxury lifestyle
+- AI storytelling
+- celebrity news
+- automotive
+- comedy
+- horror
+- documentary
+- motivation
+
+Create a flexible taxonomy.
+
+Allow hierarchical niches:
+
+Entertainment
+  └── Storytelling
+      └── Relationship Stories
+          └── Billionaire Romance
+
+==================================================
+NICHE SATURATION
+==================================================
+
+Implement a Niche Saturation Score.
+
+The score should consider:
+
+- number of active channels
+- number of active videos
+- upload frequency
+- new channels entering the niche
+- median views
+- percentage of breakout videos
+- concentration of views
+- number of dominant channels
+- recent growth
+- competition density
+
+Return:
+
+LOW
+MEDIUM
+HIGH
+VERY HIGH
+
+and also a numeric score from 0-100.
+
+Important:
+
+High competition does not automatically mean a bad niche.
+
+A niche can have:
+
+High demand
+High competition
+High opportunity
+
+Therefore keep separate concepts:
+
+Demand Score
+Competition Score
+Opportunity Score
+
+==================================================
+OPPORTUNITY SCORE
+==================================================
+
+Create a proprietary but transparent Opportunity Score.
+
+Do not pretend it is an official YouTube metric.
+
+Example:
+
+Opportunity Score =
+Demand
++ Growth
++ Outlier Frequency
++ Freshness
++ Monetization Potential
+- Competition
+- Saturation
+
+Normalize to 0-100.
+
+Show users the components.
+
+Example:
+
+Opportunity Score: 87
+
+Demand: 91
+Growth: 94
+Outlier Potential: 89
+Freshness: 92
+Competition: 48
+Saturation: 41
+Monetization: 76
+
+The exact weighting should be configurable in one central configuration file.
+
+==================================================
+SIMILAR CHANNEL ENGINE
+==================================================
+
+Implement channel similarity.
+
+Similarity can use:
+
+- niche
+- keywords
+- language
+- country
+- channel size
+- average views
+- Shorts ratio
+- long-form ratio
+- upload frequency
+- title semantics
+- topic embeddings if an optional embedding provider is enabled
+
+Return:
+
+similarityScore 0-100
+
+Example:
+
+Channel A
+94% similar
+
+Channel B
+88% similar
+
+Channel C
+81% similar
+
+Make the architecture provider-independent so embeddings can be added later.
+
+==================================================
+TITLE PATTERN ENGINE
+==================================================
+
+Create title analysis.
+
+Extract recurring patterns from successful videos.
+
+Examples:
+
+"He Didn't Know..."
+"What Happened Next..."
+"Nobody Expected..."
+"Until..."
+"POV:"
+"She Thought..."
+"The Truth About..."
+
+Do not simply count exact duplicate titles.
+
+Normalize titles into structural patterns.
+
+Analyze:
+
+- pattern frequency
+- median views
+- median outlier score
+- competition
+- growth
+- Shorts vs long-form
+- niche
+
+Show:
+
+Title Pattern
+Videos
+Median Views
+Median Outlier
+Competition
+Opportunity
+
+==================================================
+REVENUE ENGINE
+==================================================
+
+Implement estimated revenue.
+
+IMPORTANT:
+This is NOT actual YouTube revenue.
+
+Use configurable RPM ranges.
+
+Example:
+
+estimatedRevenueLow =
+views * rpmLow / 1000
+
+estimatedRevenueHigh =
+views * rpmHigh / 1000
+
+Store:
+
+rpmLow
+rpmMid
+rpmHigh
+
+Allow RPM assumptions by:
+
+country
+language
+category
+format
+
+For Shorts use a completely different model than long-form.
+
+Always label this:
+
+"Estimated"
+
+Never imply that YouTube supplied these values.
+
+==================================================
+CHANNEL ANALYTICS
+==================================================
+
+Channel page should include:
+
+- subscriber count
+- total views
+- total videos
+- channel age
+- upload frequency
+- average views
+- median views
+- Shorts ratio
+- long-form ratio
+- outlier rate
+- strongest outliers
+- recent growth
+- estimated monthly uploads
+- estimated monthly views
+- niche
+- saturation
+- similar channels
+
+Charts:
+
+Subscriber growth
+View growth
+Upload frequency
+Median views
+Outlier distribution
+Shorts vs long-form
+
+==================================================
+VIDEO PAGE
+==================================================
+
+Each video page should show:
+
+Title
+Thumbnail
+Channel
+Published date
+Age
+Views
+Likes
+Comments
+VPH
+Relative VPH
+Outlier score
+Outlier percentile
+Engagement rate
+Estimated revenue
+Niche
+Title pattern
+Similar videos
+
+Show a clear explanation:
+
+"This video is performing 12.8× above the channel's normal performance at a similar age."
+
+==================================================
+VIDEO EXPLORER
+==================================================
+
+Create powerful filters.
+
+Filters should include:
+
+minimum views
+maximum views
+minimum subscribers
+maximum subscribers
+outlier score
+VPH
+engagement
+video age
+channel age
+upload frequency
+country
+language
+category
+niche
+Shorts/long-form
+duration
+date range
+faceless
+growth
+saturation
+
+Support sorting by:
+
+views
+outlier
+VPH
+relative VPH
+engagement
+growth
+opportunity
+
+==================================================
+NICHE EXPLORER
+==================================================
+
+Show niches as cards/table.
+
+Columns:
+
+Niche
+Channels
+Videos
+Median Views
+Median Outlier
+Growth
+Competition
+Saturation
+Demand
+Opportunity
+
+Allow users to drill down:
+
+Niche
+→ Channels
+→ Videos
+→ Outliers
+
+==================================================
+SEARCH
+==================================================
+
+Implement:
+
+Global channel search
+Video search
+Keyword search
+Niche search
+
+Search must be debounced.
+
+Cache API results.
+
+Never call YouTube API unnecessarily.
+
+==================================================
+SAVED SEARCHES
+==================================================
+
+Users should be able to save filters.
+
+Example:
+
+"Shorts under 100K subscribers with 10x+ outliers"
+
+The saved search must preserve all filter parameters.
+
+Create shareable URLs for searches.
+
+Example:
+
+/videos?format=short&outlierMin=10&subsMax=100000
+
+==================================================
+SWIPE FILE
+==================================================
+
+Users can save:
+
+videos
+channels
+niches
+title patterns
+
+Add notes.
+
+Example:
+
+"Study this channel's first 30 seconds."
+
+Preserve the analytics snapshot at the time it was saved.
+
+==================================================
+DATA COLLECTION
+==================================================
+
+Create scheduled jobs.
+
+Jobs should:
+
+- discover channels
+- discover videos
+- refresh statistics
+- create snapshots
+- calculate analytics
+- update niches
+- update title patterns
+- update outlier scores
+
+Use Vercel Cron where appropriate.
+
+Do not create long-running processes that Vercel cannot support.
+
+For heavy workloads design the system so it can later use:
+
+Trigger.dev
+Inngest
+Upstash QStash
+or another background-job provider.
+
+The application should still work in a simple Vercel deployment.
+
+==================================================
+API ROUTES
+==================================================
+
+Create clean REST-style server routes:
+
+/api/search
+/api/channels
+/api/channels/[id]
+/api/channels/[id]/videos
+/api/videos
+/api/videos/[id]
+/api/niches
+/api/niches/[id]
+/api/outliers
+/api/similar
+/api/title-patterns
+/api/saved-searches
+/api/swipe-file
+/api/watchlist
+/api/analytics
+
+Validate all incoming requests using Zod.
+
+Never trust query parameters.
+
+==================================================
+CACHING
+==================================================
+
+YouTube API quota is important.
+
+Implement caching.
+
+Cache:
+
+channel metadata
+video metadata
+search results
+category data
+
+Use:
+
+Vercel KV / Upstash Redis
+
+when available.
+
+The system should still have a database fallback.
+
+==================================================
+UI/UX
+==================================================
+
+Create a premium analytics SaaS interface.
+
+Do NOT copy Nichle's exact UI.
+
+Use an original design.
+
+Style:
+
+modern
+minimal
+data-dense
+professional
+dark-first
+responsive
+
+Use:
+
+Next.js
+TypeScript
+Tailwind CSS
+shadcn/ui
+Lucide icons
+Recharts
+
+Main navigation:
+
+Dashboard
+Discover
+Videos
+Channels
+Niches
+Outliers
+Title Patterns
+Saved
+Watchlist
+Settings
+
+Dashboard should immediately answer:
+
+"What should I investigate today?"
+
+==================================================
+DASHBOARD
+==================================================
+
+Show:
+
+Trending Niches
+Rising Channels
+Extreme Outliers
+New Breakouts
+Underserved Niches
+Top Title Patterns
+Fastest Growing Channels
+
+Example card:
+
+"Niche Opportunity"
+
+AI Historical Stories
+
+Opportunity:
+91/100
+
+Growth:
++48%
+
+Saturation:
+Low
+
+Median Outlier:
+7.4x
+
+Breakout videos:
+18
+
+==================================================
+RESPONSIVE DESIGN
+==================================================
+
+Must work on:
+
+desktop
+tablet
+mobile
+
+Tables must become responsive cards on small screens.
+
+==================================================
+AUTH
+==================================================
+
+Use Auth.js.
+
+Support Google login initially.
+
+All user-specific features must be protected:
+
+saved searches
+swipe file
+watchlist
+notes
+connected channel
+
+==================================================
+SECURITY
+==================================================
+
+Never expose:
+
+YouTube API keys
+database credentials
+Redis credentials
+auth secrets
+
+Use environment variables.
+
+Create:
+
+.env.example
+
+==================================================
+ERROR HANDLING
+==================================================
+
+Handle:
+
+YouTube quota exceeded
+invalid channel
+deleted video
+private video
+API errors
+rate limiting
+missing statistics
+database errors
+invalid images
+empty searches
+
+Return useful user-facing messages.
+
+Never expose internal stack traces.
+
+==================================================
+TESTING
+==================================================
+
+Use Vitest.
+
+Write tests for:
+
+outlier calculations
+median calculations
+age normalization
+VPH
+relative VPH
+engagement
+saturation
+opportunity score
+revenue estimation
+title normalization
+similarity calculations
+
+Include edge cases.
+
+Especially:
+
+0 views
+1 view
+missing likes
+missing comments
+very new channels
+channels with only one video
+channels with viral videos
+Shorts
+long-form
+deleted videos
+
+==================================================
+SEO
+==================================================
+
+Create SEO-friendly public pages where appropriate.
+
+Use:
+
+metadata
+Open Graph
+Twitter cards
+structured data
+sitemap
+robots.txt
+
+Public pages should be indexable.
+
+Private analytics pages must not be indexed.
+
+==================================================
+PERFORMANCE
+==================================================
+
+Optimize for Vercel.
+
+Use:
+
+Server Components where appropriate
+Client Components only when necessary
+dynamic imports
+pagination
+virtualized tables where necessary
+database indexes
+API caching
+image optimization
+
+Do not load huge datasets into the browser.
+
+Use server-side pagination.
+
+==================================================
+PROJECT STRUCTURE
+==================================================
+
+Use a clean structure similar to:
+
+app/
+  dashboard/
+  discover/
+  videos/
+  channels/
+  niches/
+  outliers/
+  title-patterns/
+  saved/
+  settings/
+  api/
+
+components/
+  dashboard/
+  videos/
+  channels/
+  niches/
+  charts/
+  tables/
+  filters/
+  ui/
+
+lib/
+  youtube/
+  analytics/
+    outlier/
+    channel/
+    niche/
+    saturation/
+    opportunity/
+    revenue/
+    titles/
+    similarity/
+  db/
+  cache/
+  auth/
+  utils/
+
+prisma/
+  schema.prisma
+
+jobs/
+  refresh-channels/
+  refresh-videos/
+  calculate-analytics/
+
+tests/
+
+==================================================
+CONFIGURATION
+==================================================
+
+Create a central configuration:
+
+lib/config/analytics.ts
+
+Do not hardcode scoring weights throughout the application.
+
+Example:
+
+OUTLIER_WEIGHTS
+SATURATION_WEIGHTS
+OPPORTUNITY_WEIGHTS
+RPM_RANGES
+AGE_BUCKETS
+
+This will allow the algorithm to evolve without rewriting the application.
+
+==================================================
+README
+==================================================
+
+Create an excellent README.
+
+Include:
+
+Product overview
+Architecture
+Tech stack
+Database setup
+YouTube API setup
+Environment variables
+Local development
+Prisma migration
+Vercel deployment
+Cron configuration
+API quota management
+Analytics methodology
+Outlier methodology
+Opportunity Score methodology
+Testing
+Future roadmap
+
+==================================================
+IMPORTANT LEGAL / PRODUCT RULES
+==================================================
+
+This is an original analytics product.
+
+Do not copy Nichle's:
+
+- source code
+- proprietary assets
+- branding
+- exact UI
+- private database
+- private algorithms
+- proprietary text
+
+Use only publicly available YouTube data and original calculations.
+
+Clearly state that:
+
+"YouTube data is provided through the YouTube API. This product is not affiliated with YouTube or Google."
+
+Revenue estimates must be clearly labeled as estimates.
+
+==================================================
+IMPLEMENTATION STRATEGY
+==================================================
+
+PHASE 1:
+Create architecture and database.
+
+PHASE 2:
+Implement YouTube API client.
+
+PHASE 3:
+Implement channel/video ingestion.
+
+PHASE 4:
+Implement snapshots.
+
+PHASE 5:
+Implement analytics engine.
+
+PHASE 6:
+Implement outlier engine.
+
+PHASE 7:
+Implement niche and saturation engine.
+
+PHASE 8:
+Implement opportunity score.
+
+PHASE 9:
+Implement dashboard and explorers.
+
+PHASE 10:
+Implement authentication and saved features.
+
+PHASE 11:
+Implement caching and scheduled jobs.
+
+PHASE 12:
+Implement testing.
+
+PHASE 13:
+Optimize for Vercel.
+
+PHASE 14:
+Write complete README and deployment instructions.
+
+Do not skip directly to a fake frontend with hardcoded analytics.
+
+The application must use real database-backed data and real YouTube API integration.
+
+==================================================
+FIRST TASK
+==================================================
+
+Before writing the full implementation, do the following:
+
+1. Analyze the requirements.
+2. Propose the final architecture.
+3. Propose the Prisma database schema.
+4. Propose the folder structure.
+5. Define the analytics formulas.
+6. Define the API endpoints.
+7. Define the environment variables.
+8. Define the Vercel deployment architecture.
+9. Identify YouTube API quota risks.
+10. Identify which parts should be calculated synchronously and which should be background jobs.
+11. Explain how the system will avoid expensive repeated YouTube API calls.
+12. Explain how the outlier algorithm will avoid being distorted by viral videos.
+13. Explain how Shorts and long-form will be separated.
+14. Explain how niche saturation will be calculated.
+15. Explain how Opportunity Score will be calculated.
+
+Do NOT implement the entire project yet.
+
+First produce a detailed technical architecture document and implementation plan.
+
+After approval, implement Phase 1.
+
+The final repository must be production-oriented, modular, typed, testable, and deployable to Vercel.
