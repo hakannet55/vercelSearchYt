@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  accounts  Account[]
+  savedSearches SavedSearch[]
+  watchlists Watchlist[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Channel {
+  id                  String   @id @default(cuid())
+  youtubeChannelId    String   @unique
+  title               String
+  description         String?
+  customUrl           String?
+  country             String?
+  language            String?
+  publishedAt         DateTime?
+  subscriberCount     BigInt?
+  videoCount          Int?
+  viewCount           BigInt?
+  thumbnailUrl        String?
+  channelType         String?
+  isShortsFocused     Boolean? @default(false)
+  isFaceless          Boolean? @default(false)
+  facelessConfidence   Float?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  videos              Video[]
+  snapshots           ChannelSnapshot[]
+  savedChannels       SavedChannel[]
+}
+
+model Video {
+  id              String   @id @default(cuid())
+  youtubeVideoId   String   @unique
+  channelId       String
+  title           String
+  description     String?
+  publishedAt     DateTime
+  durationSeconds Int?
+  categoryId      Int?
+  thumbnailUrl    String?
+  viewCount       BigInt?
+  likeCount       BigInt?
+  commentCount    BigInt?
+  isShort         Boolean? @default(false)
+  isLive          Boolean? @default(false)
+  tags            String[]
+  language        String?
+  country         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  channel         Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  snapshots       VideoSnapshot[]
+  niches          VideoNiche[]
+  savedVideos     SavedVideo[]
+}
+
+model VideoSnapshot {
+  id         String   @id @default(cuid())
+  videoId    String
+  capturedAt DateTime @default(now())
+  viewCount  BigInt?
+  likeCount  BigInt?
+  commentCount BigInt?
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+}
+
+model ChannelSnapshot {
+  id             String   @id @default(cuid())
+  channelId      String
+  capturedAt      DateTime @default(now())
+  subscriberCount BigInt?
+  viewCount      BigInt?
+  videoCount     Int?
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model Niche {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  parentId    String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  videos      VideoNiche[]
+}
+
+model VideoNiche {
+  id       String @id @default(cuid())
+  videoId  String
+  nicheId  String
+  score    Float?
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  niche Niche @relation(fields: [nicheId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, nicheId])
+}
+
+model Keyword {
+  id        String @id @default(cuid())
+  value     String @unique
+  createdAt DateTime @default(now())
+}
+
+model TitlePattern {
+  id          String @id @default(cuid())
+  pattern     String @unique
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+model SavedVideo {
+  id         String   @id @default(cuid())
+  userId     String
+  videoId    String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+}
+
+model SavedChannel {
+  id         String   @id @default(cuid())
+  userId     String
+  channelId  String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model SavedSearch {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String
+  params     Json
+  shareUrl   String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Watchlist {
+  id         String   @id @default(cuid())
+  userId     String
+  type       String
+  targetId   String
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SearchHistory {
+  id         String   @id @default(cuid())
+  query      String
+  createdAt  DateTime @default(now())
+}
+
+model AnalyticsJob {
+  id          String   @id @default(cuid())
+  type        String
+  status      String
+  metadata    Json?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model ApiUsage {
+  id         String   @id @default(cuid())
+  service    String
+  quotaUsed  Int
+  createdAt  DateTime @default(now())
+}
